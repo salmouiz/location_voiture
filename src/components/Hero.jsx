@@ -31,7 +31,7 @@ const Hero =()=>{
             <div className="flex flex-col w-full">
                 <div className='flex items-center gap-2'>
                     <img src={assets.calendar} alt="calenderIcon" width={20}></img>
-                    <label htmlFor="pickUp">Retrait</label>
+                    <label htmlFor="pickUp">Prise en charge</label>
                 </div>
                 <input id="pickUp" type="date" className=" rounded border border-gray-200 px-3 py-1.5 mt-1.5 text-sm outline-none" />
             </div>
@@ -39,7 +39,7 @@ const Hero =()=>{
             <div className="flex flex-col w-full">
                 <div className='flex items-center gap-2'>
                     <img src={assets.calendar} alt="calenderIcon" width={20}></img>
-                    <label htmlFor="dropOff">Retour</label>
+                    <label htmlFor="dropOff">Restitution</label>
                 </div>
                 <input id="dropOff" type="date" className=" rounded border border-gray-200 px-3 py-1.5 mt-1.5 text-sm outline-none" />
             </div>
