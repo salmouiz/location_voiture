@@ -12,7 +12,7 @@ const Listing = () => {
   const [currPage, setCurrPage] = useState(1)
   const itemsPerPage = 6
   const currency = "MAD"
-  const [searchQuery, setsearchQuery] = useState("")
+  const [searchQuery, setSearchQuery] = useState("") // ✅ Fix: setsearchQuery → setSearchQuery
 
   const [searchParams] = useSearchParams()
   const heroDestination = (searchParams.get("destination") || "").toLowerCase().trim()
@@ -141,10 +141,10 @@ const Listing = () => {
           </div>
           {/*FILTERED CARS -RIGHT SIDE*/}
           <div className='max-sm:px-10 sm:pr-10 bg-white p-4 rounded-l-xl my-4'>
-            <div className='grid grid-cols-1 lg-grid-cols-2 xl:grid-cols-3 gap-8'>
+            <div className='grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-8'> {/* ✅ Fix: lg-grid-cols-2 → lg:grid-cols-2 */}
               {getPaginatedCars().length > 0 ? (
                 getPaginatedCars().map((car)=>(
-                  <Item key={car} car={car} />
+                  <Item key={car._id} car={car} /> // ✅ Fix: key={car} → key={car._id}
                 ))
               ) : (
                 <p className="capitalize">Aucune voiture ne correspond aux filtres sélectionnés.</p>

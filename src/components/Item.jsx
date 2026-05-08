@@ -17,7 +17,7 @@ const Item = ({car}) => {
     >
       <h4 className='line-clamp-1'>{car.title}</h4>
       <div className='flexBetween'>
-        <h5 className='my-1 text-gray-50'>{car.bodyType}</h5>
+        <h5 className='my-1 text-gray-500'>{car.bodyType}</h5>
         <div className='text-sm font-bold text-solid'>
           {currency} 
           {" "}
