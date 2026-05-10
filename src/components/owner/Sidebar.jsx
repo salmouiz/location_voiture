@@ -67,11 +67,10 @@ const Sidebar = () => {
             </div>
 
             {/* PAGE CONTENT — pas de padding, pas de bg */}
-            <div className="px-6 py-6">
+            <div className="w-full ">
                 <Outlet />
             </div>
         </div>
     )
 }
-
 export default Sidebar

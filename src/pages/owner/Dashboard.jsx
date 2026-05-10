@@ -9,24 +9,52 @@ const Dashboard = () => {
         totalRevenue: 0,
     })
     const [totalCars, setTotalCars] = useState(0)
+    const [error, setError] = useState(null)
     const { user, isLoaded } = useUser()
-    const currency = "$"
+    const currency = "DH"
 
     const getDashboardData = () => {
-        setDashboardData(dummyDashboardData)
-        setTotalCars(dummyCars?.length || 0)
+        try {
+            // Vérifies que les données existent
+            if (dummyDashboardData) {
+                setDashboardData(dummyDashboardData)
+            } else {
+                console.warn('dummyDashboardData non trouvé')
+                setDashboardData({
+                    bookings: [],
+                    totalBookings: 0,
+                    totalRevenue: 0,
+                })
+            }
+
+            if (dummyCars && Array.isArray(dummyCars)) {
+                setTotalCars(dummyCars.length)
+            } else {
+                console.warn('dummyCars non trouvé ou invalide')
+                setTotalCars(0)
+            }
+        } catch (err) {
+            console.error('Erreur lors du chargement des données:', err)
+            setError('Erreur lors du chargement des données')
+        }
     }
 
     useEffect(() => {
-        // Charger les données même sans user pour le test
         getDashboardData()
     }, [])
 
-    // Affichage de chargement
     if (!isLoaded) {
         return (
             <div className='md:px-8 py-6 xl:py-8 m-1 sm:m-3 h-[97vh] flex items-center justify-center bg-white shadow rounded-xl'>
                 <p className="text-gray-500">Chargement...</p>
+            </div>
+        )
+    }
+
+    if (error) {
+        return (
+            <div className='md:px-8 py-6 xl:py-8 m-1 sm:m-3 h-[97vh] flex items-center justify-center bg-white shadow rounded-xl'>
+                <p className="text-red-500">⚠️ {error}</p>
             </div>
         )
     }

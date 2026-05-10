@@ -1,5 +1,5 @@
 import React from 'react'
-import { Route, Routes, useLocation } from "react-router-dom"
+import {Route, Routes, useLocation} from "react-router-dom"
 import Header from './components/Header'
 import Home from './pages/Home'
 import Listing from './pages/Listing'
@@ -19,7 +19,7 @@ const App = () => {
 
   return (
     <main>
-      {!isOwnerPath && <Header />}
+      {!isOwnerPath && <Header/>}
       <Routes>
         <Route path='/' element={<Home />} />
         <Route path='/listing' element={<Listing />} />
