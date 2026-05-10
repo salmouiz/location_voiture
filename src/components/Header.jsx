@@ -103,7 +103,7 @@ const Header = () => {
                 >
                   <UserButton.MenuItems>
                     <UserButton.Action
-                      label={t('header.myBookings')}
+                      label={t('Mes réservations')}
                       labelIcon={<BookingIcon />}
                       onClick={() => navigate('/my-bookings')}
                     />
@@ -111,7 +111,7 @@ const Header = () => {
                 </UserButton>
               ) : (
                 <button onClick={openSignIn} className='btn-solid bg-black flexCenter gap-2 rounded-full'>
-                  {t('header.signIn')}
+                  {t('Se connecter')}
                   <img src={assets.user} alt="icône utilisateur" className='invert' />
                 </button>
               )}
@@ -122,5 +122,4 @@ const Header = () => {
     </header>
   )
 }
-
 export default Header
