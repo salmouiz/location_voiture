@@ -5,16 +5,16 @@ import Agency from "../models/agency.js";
 export const agencyReg = async (req, res) => {
     try {
         const { name, email, address, contact, city } = req.body
-        const owner = req.user.id  // ✅ id instead of _id
+        const owner = req.user.id  
 
         // check if user already has an agency registered
-        const agency = await Agency.findFirst({ where: { owner } })  // ✅ findFirst instead of findOne
+        const agency = await Agency.findFirst({ where: { owner } })  
         if (agency) {
             return res.json({ success: false, message: "Agence déjà enregistrée" })
         }
 
-        await Agency.create({ data: { name, email, address, contact, city, owner } })  // ✅ wrap in data:{}
-        await User.update({  // ✅ update instead of findByIdAndUpdate
+        await Agency.create({ data: { name, email, address, contact, city, owner } }) 
+        await User.update({ 
             where: { id: owner },
             data: { role: "agencyOwner" }
         })

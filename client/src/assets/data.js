@@ -14,7 +14,7 @@ import carBlack from './car-black.svg'
 import carPlus from './car-plus.svg'
 import transmission from './transmission.svg'
 import seats from './seats.svg'
-import fuelType from './fueltype.svg'
+import fuelType from './fuel-type.svg'
 import odometer from './odometer.svg'
 import facebook from './facebook.svg'
 import instagram from './instagram.svg'
@@ -320,7 +320,7 @@ export const dummyCars = [
   "specs": {
     "transmission": "Automatique",
     "seats": 2,
-    "fuelType": "Essence"
+    "": "Essence"
   },
   "odometer": 7000,
   "features": ["Rear Camera","Parking Assist","Adaptive Cruise","Apple CarPlay"],

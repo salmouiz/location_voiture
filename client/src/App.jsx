@@ -9,7 +9,7 @@ import Contact from './pages/Contact'
 import MyBookings from './pages/MyBookings'
 import Footer from './components/Footer'
 import Sidebar from './components/owner/Sidebar'   // ← ajouter cet import
-import AddCar from './pages/owner/addCar'
+import AddCar from './pages/owner/AddCar'
 import ListCar from './pages/owner/ListCar'
 import Dashboard from './pages/owner/Dashboard'    // ← ajouter cet import
 

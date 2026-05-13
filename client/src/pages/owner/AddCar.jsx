@@ -38,7 +38,7 @@ const AddCar = () => {
         priceSale: "",
         Transmissions: "",
         seats: "",
-        fueltypes: "",
+        fuelTypes: "",
         features: {
             "Caméra de recul": false,
             "Apple CarPlay": false,
@@ -118,7 +118,7 @@ const AddCar = () => {
                 priceSale: "",
                 Transmissions: "",
                 seats: "",
-                fueltypes: "",
+                fuelTypes: "",
                 features: {
                     "Caméra de recul": false,
                     "Apple CarPlay": false,
@@ -318,8 +318,8 @@ const AddCar = () => {
                                     <label className={labelClasses}>Carburant</label>
                                     <div className="relative">
                                         <select 
-                                            name="fueltypes"
-                                            value={input.fueltypes}
+                                            name="fuelTypes"
+                                            value={input.fuelTypes}
                                             onChange={handleInputChange}
                                             className={selectClasses}
                                         >

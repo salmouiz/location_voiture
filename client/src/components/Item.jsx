@@ -40,7 +40,7 @@ const Item = ({car}) => {
           </p>
           <hr className='h-[44px] w-0.5 bg-slate-900/20 border-none' />
           <p className='flexCenter flex-col gap-1 font-semibold'>
-            <img src={assets.fueltype} alt="" width={19} />
+            <img src={assets.fuelType} alt="" width={19} />
             {car.specs.fuelType}
           </p>
           <hr className='h-[44px] w-0.5 bg-slate-900/20 border-none' />
