@@ -1,7 +1,10 @@
-import prisma from "../models/User.js";
+//import prisma from "../models/User.js";
+//import { prisma } from "../config/lib/prisma.js";
 import { Webhook } from "svix";
+import User from "../models/User.js";
 
 const clerkWebhooks = async (req, res) => {
+    console.log("🔔 Webhook hit!")
     try {
         // Creating a svix instance 
         const whook = new Webhook(process.env.CLERK_WEBHOOK_SECRET)
@@ -24,27 +27,27 @@ const clerkWebhooks = async (req, res) => {
             case "user.created": {
                 const userData = {
                     id: data.id,
-                    email: data.email_addresses[0].email_address,
-                    username: data.first_name + " " + data.last_name,
-                    image: data.image_url,
+                    email: data.email_addresses?.[0]?.email_address?? "no-email@test.com",
+                    username: (data.first_name ?? "") + " " + (data.last_name ?? ""),
+                    image: data.image_url ?? "",
                 };
-                await prisma.user.create({ data: userData })
+                await User.create({ data: userData })
                 break;
             }
             case "user.updated": {
                 const userData = {
-                    email: data.email_addresses[0].email_address,
-                    username: data.first_name + " " + data.last_name,
-                    image: data.image_url,
+                    email: data.email_addresses?.[0]?.email_address?? "no-email@test.com",
+                    username: (data.first_name ?? "") + " " + (data.last_name ?? ""),
+                    image: data.image_url ?? "",
                 };
-                await prisma.user.update({
+                await User.update({
                     where: { id: data.id },
                     data: userData
                 })
                 break;
             }
             case "user.deleted": {
-                await prisma.user.delete({
+                await User.delete({
                     where: { id: data.id }
                 })
                 break;

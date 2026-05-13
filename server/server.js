@@ -1,12 +1,11 @@
 import "dotenv/config"
 import express from "express"
 import cors from "cors"
-import prisma from "./config/lib/prisma.js"
+//import prisma from "./config/lib/prisma.js"
 import { clerkMiddleware } from '@clerk/express'
-import clerkWebhooks from "./controllers/clerkWebhooks.js"
-
-
-//await connectDB()
+import clerkWebhooks from "./controllers/clerkWebHooks.js" 
+import userRouter from "./routes/userRoute.js"
+import agencyRouter from "./routes/agencyRoute.js"
 
 
 const app = express()  //initialize express application
@@ -19,6 +18,11 @@ app.use(clerkMiddleware())
 
 //Route endpoint to check AP status
 app.use("/api/clerk", clerkWebhooks)
+
+//define api routes
+app.use('/api/user', userRouter)
+app.use('/api/agencies', agencyRouter)
+
 app.get('/', (req,res) => res.send("API Conecté avec succès"))
 
 const port = process.env.PORT || 4000  //Define server port
