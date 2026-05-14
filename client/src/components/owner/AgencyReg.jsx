@@ -32,6 +32,8 @@ const AgencyReg = () => {
                     <img src={assets.close} alt="" />
                     <h3>Enregistrez l'agence</h3>
                     <div>
+
+                        
                         <div>
                             <label htmlFor="name">Nom de l'agence</label>
                             <input type="text" placeholder='tapez ici ...' className=''/>
