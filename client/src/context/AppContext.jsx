@@ -20,11 +20,11 @@ export const AppContextProvider = ({ children }) => {
     const { user } = useUser();
     const { getToken } = useAuth();
 
-    const getUser = async () => { // ✅ getUser correctement fermée
+    const getUser = async () => {
         try {
             const { data } = await axios.get('/api/user', {
                 headers: {
-                    Authorization: `Bearer ${await getToken()}` // ✅ Backticks corrigés
+                    Authorization: `Bearer ${await getToken()}`
                 }
             });
 
