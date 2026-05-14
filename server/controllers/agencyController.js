@@ -1,5 +1,5 @@
 import User from "../models/User.js";
-import Agency from "../models/agency.js";
+import Agency from "../models/Agency.js";
 
 // REGISTER A NEW AGENCY FOR THE LOGGED IN USER [POST "/agencies"]
 export const agencyReg = async (req, res) => {
