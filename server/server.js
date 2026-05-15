@@ -13,11 +13,15 @@ import bookingRouter from "./routes/bookingRoute.js"
 
 connectCloudinary()
 const app = express()  //initialize express application
-app.use(cors())   //enables cross-origin resource sharing
+app.use(cors({
+    origin: ['http://localhost:5173', 'http://localhost:4000'],
+    credentials: true
+}))  //enables cross-origin resource sharing
 
 //middleware setup
 app.use(express.json()) //enables json request body parsing
 app.use(clerkMiddleware())
+
 
 
 //Route endpoint to check AP status

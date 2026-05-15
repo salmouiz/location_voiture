@@ -3,6 +3,7 @@ import User from "../models/User.js";
 export const authUser = async (req, res, next) => {
     try {
         const { userId } = req.auth()
+        console.log("UserId:", userId)
         if (!userId) {
             return res.json({ success: false, message: "Pas Authorisé" })
         }

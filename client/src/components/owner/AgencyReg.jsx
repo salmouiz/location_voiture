@@ -16,7 +16,7 @@ const AgencyReg = () => {
 
         try {
             event.preventDefault();
-            const { data } = await axios.get('/api/agencies', {
+            const { data } = await axios.post('/api/agencies', {name, email, address, contact, city}, {
                 headers: {
                     Authorization: `Bearer ${await getToken()}`
                 }
@@ -52,7 +52,7 @@ const AgencyReg = () => {
                     </div>
                     <div className='w-full mt-4'>
                         <label htmlFor="email" className='text-sm font-semibold'>Email</label>
-                        <input onChange={(e) => setEmail(e.target.value)} value={contact} id='email' type="email" placeholder='tapez ici ...' required className='border bg-primary border-slate-900/10 rounded-lg w-full px-3 py-1.5 mt-1 outline-none'/>
+                        <input onChange={(e) => setEmail(e.target.value)} value={email} id='email' type="email" placeholder='tapez ici ...' required className='border bg-primary border-slate-900/10 rounded-lg w-full px-3 py-1.5 mt-1 outline-none'/>
                     </div>
                     <div className='w-full mt-4'>
                         <label htmlFor="address" className='text-sm font-semibold'>Adresse</label>
@@ -67,7 +67,7 @@ const AgencyReg = () => {
                             ))}
                         </select>
                     </div>
-                    <button className='btn-solid py-2 rounded-lg w-32 mt-6'>
+                    <button type='submit' className='btn-solid py-2 rounded-lg w-32 mt-6'>
                         Enregistrer
                     </button>
                 </div>

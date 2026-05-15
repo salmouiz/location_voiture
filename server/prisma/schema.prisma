@@ -48,7 +48,7 @@ model Car {
   bodyType     String
   price        Float
   transmission String
-  seats        String
+  seats        Int
   fuelType     String
   features     String[]
   images       String[]

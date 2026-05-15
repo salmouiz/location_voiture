@@ -21,7 +21,8 @@ export const addNewCar = async (req, res) => {
         } = req.body;
 
         // ✅ findFirst instead of findOne
-        const agency = await Agency.findFirst({ where: { owner: req.auth().userId } })
+        const agency = await Agency.findFirst({ where: { owner: req.user.id } })
+        console.log("Agency found:", agency)
 
         if (!agency) {
             return res.json({ success: false, message: "Agence pas trouvée" })
@@ -29,8 +30,15 @@ export const addNewCar = async (req, res) => {
 
         // Upload images to cloudinary
         const uploadImages = req.files.map(async (file) => {
-            const response = await cloudinary.uploader.upload(file.path)
-            return response.secure_url;
+            console.log("Uploading file:", file.path)
+            try {
+                const response = await cloudinary.uploader.upload(file.path)
+                console.log("Upload success:", response.secure_url)
+                return response.secure_url;
+            } catch (err) {
+                console.log("Upload error:", err.message)
+                throw err
+            }
         })
 
         const images = await Promise.all(uploadImages)
@@ -45,7 +53,8 @@ export const addNewCar = async (req, res) => {
                 address,
                 odometer: +odometer,
                 bodyType,
-                price: +price,        
+                price: +price,
+                transmission,     
                 seats: +seats,
                 fuelType,
                 features: JSON.parse(features),
@@ -53,6 +62,7 @@ export const addNewCar = async (req, res) => {
             }
         });
         res.json({ success: true, message: "Voiture Ajouté" })
+        
     } catch (error) {
         res.json({ success: false, message: error.message })
     }
