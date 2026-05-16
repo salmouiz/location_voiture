@@ -2,7 +2,7 @@ import Booking from "../models/Booking.js";  // ✅ added .js
 import Car from "../models/Car.js";
 import Agency from "../models/Agency.js";    // ✅ fixed duplicate import and capital A
 import Stripe from "stripe";
-import transporter from "../config/nodeMailer.js"  // ← add this
+import transporter from "../config/nodemailer.js"
 
 // INTERNAL HELPER
 const checkBookingAvailability = async ({ car, pickUpDate, dropOffDate }) => {  // ✅ fixed typo

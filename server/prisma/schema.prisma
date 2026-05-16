@@ -68,7 +68,7 @@ model Booking {
   dropOffDate   DateTime
   totalPrice    Float
   status        String   @default("pending")
-  paymentMethod String   @default("Pay at pickup")
+  paymentMethod String   @default("Payer lors de la prise en charge")
   isPaid        Boolean  @default(false)
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
