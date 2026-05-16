@@ -1,48 +1,54 @@
 import React, { useEffect, useState } from "react";
-import { dummyCars } from "../../assets/data";
-import { useUser } from "@clerk/clerk-react";
+import {useAppContext} from '../../context/AppContext'
+import toast from "react-hot-toast";
 
 const ListCar = () => {
+    const {axios, getToken, user, currency} = useAppContext()
     const [cars, setCars] = useState([]);
-    const [error, setError] = useState(null);
-    const { user, isLoaded } = useUser();
-    const currency = "DH";
+    //const [error, setError] = useState(null);
 
-    const getCars = () => {
+    //Get cars of the agency
+    const getCars = async() => {
         try {
-            if (dummyCars && Array.isArray(dummyCars)) {
-                setCars(dummyCars);
-            } else {
-                console.warn("dummyCars n'est pas un tableau:", dummyCars);
-                setCars([]);
-                setError("Impossible de charger les voitures");
+            const { data } = await axios.get('/api/cars/owner', {
+                headers: {
+                    Authorization: `Bearer ${await getToken()}`
+                }
+            })
+            if (data.success){
+                setCars(data.cars)
+            }else{
+                toast.error(data.message)
             }
-        } catch (err) {
-            console.error("Erreur lors du chargement des voitures:", err);
-            setError("Erreur lors du chargement des voitures");
-            setCars([]);
+        } catch (error) {
+            toast.error(error.message)
         }
     };
 
+    //Toggle availability of the car
+    const toggleAvailability = async (carId)=>{
+        try {
+            const { data } = await axios.post('/api/cars/toggle-availability', {carId},{
+                headers: {
+                    Authorization: `Bearer ${await getToken()}`
+                }
+            })
+            if (data.success){
+                toast.success(data.message)
+                getCars()
+            }else{
+                toast.error(data.message)
+            }
+        } catch (error) {
+            toast.error(error.message)
+        }
+    }
+
     useEffect(() => {
-        getCars();
-    }, []);
-
-    if (!isLoaded) {
-        return (
-            <div className="md:px-8 py-6 xl:py-8 m-1 sm:m-3 h-[97vh] flex items-center justify-center bg-white shadow rounded-xl">
-                <p className="text-gray-500">Chargement...</p>
-            </div>
-        );
-    }
-
-    if (error) {
-        return (
-            <div className="md:px-8 py-6 xl:py-8 m-1 sm:m-3 h-[97vh] flex items-center justify-center bg-white shadow rounded-xl">
-                <p className="text-red-500">⚠️ {error}</p>
-            </div>
-        );
-    }
+        if(user){
+            getCars()
+        }
+    }, [user]);
 
     return (
         <div className='md:px-8 py-6 xl:py-8 m-1 sm:m-3 h-[97vh] overflow-y-scroll lg:w-11/12 bg-white shadow rounded-xl'>
@@ -52,8 +58,8 @@ const ListCar = () => {
                     <h5 className='hidden lg:block'>#</h5>
                     <h5>Nom</h5>
                     <h5>Adresse</h5>
-                    <h5>Louer/Jour</h5>
-                    <h5>Disponible</h5>
+                    <h5>Prix/Jour</h5>
+                    <h5>Disponibilité</h5>
                 </div>
 
                 {/* Liste des voitures */}
@@ -64,7 +70,7 @@ const ListCar = () => {
                 ) : (
                     cars.map((car, index) => (
                         <div 
-                            key={car._id || index} 
+                            key={car.id || index} 
                             className='flex flex-col sm:grid sm:grid-cols-[0.5fr_2fr_2fr_1fr_1fr_1fr] px-6 py-3 bg-primary text-gray-50 text-sm font-semibold border-b border-slate-900/10 gap-2'
                         >
                             <div className='hidden lg:block'>{index + 1}</div>
@@ -88,17 +94,18 @@ const ListCar = () => {
                             </div>
                             
                             <div className="flex items-center">
-                                {currency}{car?.price?.rent?.toLocaleString() || "0"}
+                                {currency}{car?.price.toLocaleString() || "0"}
                             </div>
                             
                             
                             
                             <div className="flex items-center">
                                 <label className='relative inline-flex items-center cursor-pointer gap-3'>
-                                    <input 
+                                    <input
+                                        onChange={()=>toggleAvailability(car.id) }
                                         type="checkbox" 
                                         className='sr-only peer' 
-                                        defaultChecked={car?.isAvailable || false} 
+                                        checked={car?.isAvailable || false} 
                                     />
                                     <div className='w-10 h-6 bg-slate-300 rounded-full peer peer-checked:bg-green-500 transition-colors duration-200'></div>
                                     <span className='absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-transform duration-200 ease-in-out peer-checked:translate-x-4' />

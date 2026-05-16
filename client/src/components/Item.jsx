@@ -8,10 +8,10 @@ const Item = ({car}) => {
   const navigate = useNavigate()
 
   const colors = ["#f5f5f5", "#f0f9fd", "#fcf6ed"];
-  const bgColor = colors[parseInt(car._id?.slice(-4) || "0", 16) % colors.length]
+  const bgColor = colors[parseInt(car.id?.slice(-4) || "0", 16) % colors.length]
 
   return (
-    <div onClick={()=>{navigate("/listing/" +car._id); scrollTo(0, 0)}}
+    <div onClick={()=>{navigate("/listing/" +car.id); scrollTo(0, 0)}}
     className='block rounded-lg ring-1 ring-slate-900/5 p-5 cursor-pointer'
     style={{backgroundColor: bgColor}}
     >
@@ -21,7 +21,7 @@ const Item = ({car}) => {
         <div className='text-sm font-bold text-solid'>
           {currency} 
           {" "}
-          {car.price.rent}.00 <span className='text-xs'>/jour</span>
+          {car.price}.00 <span className='text-xs'>/jour</span>
         </div>
       </div>
       <div className='relative py-6'>
@@ -31,17 +31,17 @@ const Item = ({car}) => {
         <div className='flexBetween py-2'>
           <p className='flexCenter flex-col gap-1 font-semibold'>
             <img src={assets.transmission} alt="" width={19} />
-            {car.specs.transmission}
+            {car.transmission}
           </p>
           <hr className='h-[44px] w-0.5 bg-slate-900/20 border-none' />
           <p className='flexCenter flex-col gap-1 font-semibold'>
             <img src={assets.seats} alt="" width={19} />
-            {car.specs.seats}
+            {car.seats}
           </p>
           <hr className='h-[44px] w-0.5 bg-slate-900/20 border-none' />
           <p className='flexCenter flex-col gap-1 font-semibold'>
             <img src={assets.fuelType} alt="" width={19} />
-            {car.specs.fuelType}
+            {car.fuelType}
           </p>
           <hr className='h-[44px] w-0.5 bg-slate-900/20 border-none' />
           <p className='flexCenter flex-col gap-1 font-semibold'>

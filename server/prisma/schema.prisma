@@ -13,7 +13,7 @@ model User {
   email                String   @unique
   image                String
   role                 String   @default("user")
-  recentSearchedCities String?
+  recentSearchedCities String[]
   createdAt            DateTime @default(now())
   updatedAt            DateTime @updatedAt
   agencies             Agency[]

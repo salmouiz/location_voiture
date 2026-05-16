@@ -16,21 +16,16 @@ export const AppContextProvider = ({ children }) => {
     const [showAgencyReg, setShowAgencyReg] = useState(false);
     const [isOwner, setIsOwner] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
-
     const { user } = useUser();
     const { getToken } = useAuth();
 
     const getUser = async () => {
         try {
-            const { data } = await axios.get('/api/user', {
-                headers: {
-                    Authorization: `Bearer ${await getToken()}`
-                }
-            });
+            const { data } = await axios.get('/api/user', {headers: {Authorization: `Bearer ${await getToken()}`}});
 
             if (data.success) {
                 setIsOwner(data.role === "agencyOwner");
-                setSearchedCities(data.recentSearchedCities);
+                setSearchedCities(data.recentSearchedCities || []);
             } else {
                 setTimeout(() => {
                     getUser();
@@ -39,7 +34,20 @@ export const AppContextProvider = ({ children }) => {
         } catch (error) {
             toast.error(error.message);
         }
-    }; // ✅ Fin de getUser ici (était mal placée avant)
+    };
+
+    const getCars = async ()=>{
+        try {
+            const {data} = await axios.get("/api/cars")
+            if(data.success){
+                setCars(data.cars)
+            }else{
+                toast.error(data.message)
+            }
+        } catch(error) {
+            toast.error(error.message)
+        }
+    }
 
     // ✅ useEffect sorti de getUser + dépendance [user] ajoutée
     useEffect(() => {
@@ -47,6 +55,10 @@ export const AppContextProvider = ({ children }) => {
             getUser();
         }
     }, [user]);
+
+    useEffect(()=>{
+        getCars();
+    }, [])
 
     // ✅ value et return sortis de getUser
     const value = {
@@ -57,6 +69,8 @@ export const AppContextProvider = ({ children }) => {
         navigate,
         cars,
         setCars,
+        getCars,
+        getUser,
         searchedCities,
         setSearchedCities,
         showAgencyReg,

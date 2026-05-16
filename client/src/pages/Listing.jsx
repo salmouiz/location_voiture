@@ -1,9 +1,10 @@
 import React, {useState, useMemo} from 'react'
 import {useSearchParams} from "react-router-dom"
 import Item from "../components/Item"
-import { dummyCars } from '../assets/data'
+import { useAppContext } from '../context/AppContext'
 
 const Listing = () => {
+  const {cars, searchQuery, currency} = useAppContext()
   const [selectedFilters, setSelectedFilters] = useState({
     bodyType:[],
     priceRange: []
@@ -11,8 +12,6 @@ const Listing = () => {
   const [selectedSort, setSelectedSort] = useState("")
   const [currPage, setCurrPage] = useState(1)
   const itemsPerPage = 6
-  const currency = "MAD"
-  const [searchQuery, setSearchQuery] = useState("") // ✅ Fix: setsearchQuery → setSearchQuery
 
   const [searchParams] = useSearchParams()
   const heroDestination = (searchParams.get("destination") || "").toLowerCase().trim()
@@ -49,8 +48,8 @@ const Listing = () => {
 
   //sorting function
   const sortCars = (a,b)=>{
-    if(selectedSort == "Prix croissant") return a.price.rent - b.price.rent;
-    if(selectedSort == "Prix décroissant") return b.price.rent - a.price.rent;
+    if(selectedSort == "Prix croissant") return a.price - b.price;
+    if(selectedSort == "Prix décroissant") return b.price - a.price;
     return 0;
   }
 
@@ -59,7 +58,7 @@ const Listing = () => {
     if(selectedFilters.priceRange.length === 0) return true;
     return selectedFilters.priceRange.some((range)=>{
       const [min, max] = range.split(" à ").map(Number);
-      return car.price.rent >= min && car.price.rent <= max
+      return car.price >= min && car.price <= max
     })
   }
 
@@ -87,13 +86,13 @@ const Listing = () => {
 
   //Filtered & sorted CARS
   const filteredCars = useMemo(()=>{
-    return dummyCars.filter((c)=>
+    return cars.filter((c)=>
       matchesType(c) &&
       matchesPrice(c) &&
       matchesSearch(c) &&
       matchesHeroDestination(c)
     ).sort(sortCars)
-  }, [dummyCars, selectedFilters, selectedSort, searchQuery, heroDestination])
+  }, [cars, selectedFilters, selectedSort, searchQuery, heroDestination])
 
   //handle pagination logic
   const getPaginatedCars = ()=>{
@@ -144,7 +143,7 @@ const Listing = () => {
             <div className='grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-8'> {/* ✅ Fix: lg-grid-cols-2 → lg:grid-cols-2 */}
               {getPaginatedCars().length > 0 ? (
                 getPaginatedCars().map((car)=>(
-                  <Item key={car._id} car={car} /> // ✅ Fix: key={car} → key={car._id}
+                  <Item key={car.id} car={car} /> // ✅ Fix: key={car} → key={car.id}
                 ))
               ) : (
                 <p className="capitalize">Aucune voiture ne correspond aux filtres sélectionnés.</p>

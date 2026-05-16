@@ -2,6 +2,7 @@ import Booking from "../models/Booking.js";  // ✅ added .js
 import Car from "../models/Car.js";
 import Agency from "../models/Agency.js";    // ✅ fixed duplicate import and capital A
 import Stripe from "stripe";
+import transporter from "../config/nodeMailer.js"  // ← add this
 
 // INTERNAL HELPER
 const checkBookingAvailability = async ({ car, pickUpDate, dropOffDate }) => {  // ✅ fixed typo
@@ -9,8 +10,8 @@ const checkBookingAvailability = async ({ car, pickUpDate, dropOffDate }) => {  
         const bookings = await Booking.findMany({  // ✅ findMany instead of find
             where: {
                 car,
-                pickUpDate: { lte: new Date(dropOffDate) },   // ✅ $lte → lte
-                dropOffDate: { gte: new Date(pickUpDate) },   // ✅ $gte → gte
+                pickUpDate: { lte: new Date(dropOffDate) },
+                dropOffDate: { gte: new Date(pickUpDate) },
             }
         });
         const isAvailable = bookings.length === 0
@@ -37,6 +38,9 @@ export const checkAvailability = async (req, res) => {  // ✅ fixed typo in nam
 
 // CREATE A NEW BOOKING [POST "/book"]
 export const bookingCreate = async (req, res) => {
+    console.log("🎯 bookingCreate hit!")
+    console.log("User:", req.user)
+    console.log("Body:", req.body)
     try {
         const { car, pickUpDate, dropOffDate } = req.body
         const user = req.user.id  // ✅ id instead of _id
@@ -65,7 +69,7 @@ export const bookingCreate = async (req, res) => {
         const days = Math.max(1, Math.ceil(timeDiff / (1000 * 3600 * 24)))
         totalPrice *= days
 
-        await Booking.create({          // ✅ lowercase create, wrapped in data:{}
+        const booking = await Booking.create({          // ✅ lowercase create, wrapped in data:{}
             data: {
                 user,
                 car,
@@ -75,7 +79,29 @@ export const bookingCreate = async (req, res) => {
                 totalPrice,
             }
         })
-        res.json({ success: true, message: "Booking Created" })
+
+        const mailOptions = {
+            from: process.env.SENDER_EMAIL,
+            to: req.user.email,
+            subject: "Car Booking",
+            html:`
+                <h2>Détails de votre réservation</h2>
+                <p>Merci pour votre réservation ! Retrouvez ci-dessous les détails de votre réservation.</p>
+                <ul>
+                    <li><strong>Reservation ID:</strong>${booking.id}</li>
+                    <li><strong>Nom de l'agence:</strong>${carData.agencyRef.name}</li>
+                    <li><strong>Localisation:</strong>${carData.address}</li>
+                    <li><strong>Date:</strong>${booking.pickUpDate.toDateString()}-${booking.dropOffDate.toDateString()}</li>
+                    <li><strong>Prix:</strong>${process.env.CURRENCY ||"MAD"}${booking.totalPrice} Pour ${days}</li>
+                </ul>
+                <p>Nous avons hâte de vous accueillir prochainement.</p>
+                <p>Besoin de modifier quelque chose ? Contactez-nous.</p>
+            `
+        }
+
+        await transporter.sendMail(mailOptions)
+
+        res.json({ success: true, message: "Booking Crée" })
     } catch (error) {
         res.json({ success: false, message: error.message })  // ✅ fixed duplicate res.json
     }
@@ -117,11 +143,32 @@ export const getAgencyBooking = async (req, res) => {
         res.json({ success: false, message: error.message })
     }
 }
+export const markAsPaid = async (req, res) => {
+    try {
+        const { bookingId } = req.body
+        await Booking.update({
+            where: { id: bookingId },
+            data: { isPaid: true }
+        })
+        res.json({ success: true, message: "Réservation marquée comme payée" })
+    } catch (error) {
+        res.json({ success: false, message: error.message })
+    }
+}
 
 // STRIPE PAYMENT [POST "/stripe"]
+
 export const bookingStripePayment = async (req, res) => {
     try {
+        /*
+        const {bookingId} = req.body
+        const booking = await booking.findById(bookingId)
+        const carData = await car.findById(booking.car).populate("agency")
+        const totalPrice = booking.totalPrice
+        const {origin} = req.headers
 
+        const stripeInstance = new Stripe(process.env.)
+        */
     } catch (error) {
         res.json({ success: false, message: error.message })
     }

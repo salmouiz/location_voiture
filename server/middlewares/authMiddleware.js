@@ -1,6 +1,7 @@
 import User from "../models/User.js";
 
 export const authUser = async (req, res, next) => {
+    let user = null
     try {
         const { userId } = req.auth()
         console.log("UserId:", userId)
@@ -10,6 +11,7 @@ export const authUser = async (req, res, next) => {
 
         // ✅ findUnique instead of findById
         let user = await User.findUnique({ where: { id: userId } })
+        console.log("👤 user found:", user)
         if (!user) {
             return res.json({ success: false, message: "Pas Authorisé" })
         }

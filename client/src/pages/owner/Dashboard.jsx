@@ -1,8 +1,11 @@
 import React, { useEffect, useState } from 'react'
-import { assets, dummyDashboardData, dummyCars } from '../../assets/data'
+import { assets} from '../../assets/data'
 import { useUser } from "@clerk/clerk-react"
+import { useAppContext } from '../../context/AppContext'
+import toast from 'react-hot-toast'
 
 const Dashboard = () => {
+    const {axios, getToken, user, currency} = useAppContext()
     const [dashboardData, setDashboardData] = useState({
         bookings: [],
         totalBookings: 0,
@@ -10,54 +13,47 @@ const Dashboard = () => {
     })
     const [totalCars, setTotalCars] = useState(0)
     const [error, setError] = useState(null)
-    const { user, isLoaded } = useUser()
-    const currency = "DH"
 
-    const getDashboardData = () => {
+    const getDashboardData = async() => {
         try {
+            const { data } = await axios.get('/api/bookings/agency', {
+                headers: {
+                    Authorization: `Bearer ${await getToken()}`
+                }
+            });
             // Vérifies que les données existent
-            if (dummyDashboardData) {
-                setDashboardData(dummyDashboardData)
+            if (data.success) {
+                setDashboardData(data.dashboardData)
             } else {
-                console.warn('dummyDashboardData non trouvé')
-                setDashboardData({
-                    bookings: [],
-                    totalBookings: 0,
-                    totalRevenue: 0,
-                })
+                toast.error(data.message)
             }
+        } catch (error) {
+            toast.error(error.message)
+        }
+    };
 
-            if (dummyCars && Array.isArray(dummyCars)) {
-                setTotalCars(dummyCars.length)
+    const markBookingAsPaid = async (bookingId) => {
+        try {
+            const { data } = await axios.post('/api/bookings/mark-paid', { bookingId }, {
+                headers: { Authorization: `Bearer ${await getToken()}` }
+            })
+            if (data.success) {
+                toast.success(data.message)
+                getDashboardData()
             } else {
-                console.warn('dummyCars non trouvé ou invalide')
-                setTotalCars(0)
+                toast.error(data.message)
             }
-        } catch (err) {
-            console.error('Erreur lors du chargement des données:', err)
-            setError('Erreur lors du chargement des données')
+        } catch (error) {
+            toast.error(error.message)
         }
     }
 
     useEffect(() => {
-        getDashboardData()
-    }, [])
+        if(user){
+            getDashboardData();
+        }
 
-    if (!isLoaded) {
-        return (
-            <div className='md:px-8 py-6 xl:py-8 m-1 sm:m-3 h-[97vh] flex items-center justify-center bg-white shadow rounded-xl'>
-                <p className="text-gray-500">Chargement...</p>
-            </div>
-        )
-    }
-
-    if (error) {
-        return (
-            <div className='md:px-8 py-6 xl:py-8 m-1 sm:m-3 h-[97vh] flex items-center justify-center bg-white shadow rounded-xl'>
-                <p className="text-red-500">⚠️ {error}</p>
-            </div>
-        )
-    }
+    }, [user])
 
     return (
         <div className='md:px-8 py-6 xl:py-8 m-1 sm:m-3 h-[97vh] overflow-y-scroll lg:w-11/12 bg-white shadow rounded-xl'>
@@ -113,7 +109,7 @@ const Dashboard = () => {
                 ) : (
                     dashboardData.bookings.map((booking, index) => (
                         <div 
-                            key={booking._id || index} 
+                            key={booking.id || index} 
                             className='flex flex-col sm:grid sm:grid-cols-[0.5fr_2fr_2fr_1fr_1fr] px-6 py-3 bg-primary text-gray-50 text-sm font-semibold border-b border-slate-900/10 gap-2'
                         >
                             <div className='hidden lg:block'>{index + 1}</div>
@@ -121,7 +117,7 @@ const Dashboard = () => {
                             <div className='flex items-center gap-x-2'>
                                 <div className='overflow-hidden rounded-lg shrink-0'>
                                     <img
-                                        src={booking?.car?.images?.[0]}
+                                        src={booking?.carRef?.images?.[0]}
                                         alt={booking?.car?.title || "Voiture"}
                                         className='w-16 h-12 object-cover rounded-lg'
                                         onError={(e) => {
@@ -129,7 +125,7 @@ const Dashboard = () => {
                                         }}
                                     />
                                 </div>
-                                <div className='line-clamp-2'>{booking?.car?.title || "N/A"}</div>
+                                <div className='line-clamp-2'>{booking?.carRef?.title || "N/A"}</div>
                             </div>
                             
                             <div className="flex items-center text-xs">
@@ -149,6 +145,14 @@ const Dashboard = () => {
                                 }`}>
                                     {booking?.isPaid ? "Payé" : "Non Payé"}
                                 </span>
+                                {!booking?.isPaid && (
+                                    <button
+                                        onClick={() => markBookingAsPaid(booking.id)}
+                                        className='px-2 py-1 bg-blue-500 text-white text-xs rounded-full'
+                                    >
+                                        Marquer payé
+                                    </button>
+                                )}
                             </div>
                         </div>
                     ))

@@ -1,17 +1,13 @@
 import { PrismaClient } from "@prisma/client";
 
-const prisma = new PrismaClient();
-/*
-const connectDB = async () => {
-  try {
-    await prisma.$connect();
-    console.log("Database connected");
-  } catch (error) {
-    console.log("Database connection failed", error.message);
-  }
-};
+const globalForPrisma = global;
 
-export default connectDB;
-*/
+const prisma = globalForPrisma.prisma || new PrismaClient({
+    log: ['error'],
+});
+
+if (process.env.NODE_ENV !== 'production') {
+    globalForPrisma.prisma = prisma;
+}
 
 export default prisma;

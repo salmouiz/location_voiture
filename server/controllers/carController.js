@@ -35,7 +35,7 @@ export const addNewCar = async (req, res) => {
                 const response = await cloudinary.uploader.upload(file.path)
                 console.log("Upload success:", response.secure_url)
                 return response.secure_url;
-            } catch (err) {
+            } catch (err) { 
                 console.log("Upload error:", err.message)
                 throw err
             }

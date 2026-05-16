@@ -1,16 +1,26 @@
 import React, {useEffect, useState} from 'react'
-import { assets, dummyBookingsData } from '../assets/data'
-import { useUser} from "@clerk/clerk-react"
+import { assets } from '../assets/data'
 import Title from '../components/Title'
+import { useAppContext } from '../context/AppContext'
+import toast from 'react-hot-toast'
 
 
 const MyBookings = () => {
+  const {currency, user, axios, getToken} = useAppContext()
   const [bookings, setBookings] = useState([])
-  const currency = "MAD"
-  const {user} = useUser()
 
   const getUserBooking = async ()=>{
-    setBookings(dummyBookingsData)
+    try {
+      const { data } = await axios.get('/api/bookings/user', {headers: {Authorization: `Bearer ${await getToken()}`}});
+      console.log("Bookings data:", data)
+      if(data.success){
+        setBookings(data.bookings)
+      }else{
+        toast.error(data.message)
+      }
+    } catch (error) {
+      toast.error(error.message)
+    }
   }
 
   useEffect(()=>{
@@ -27,19 +37,19 @@ const MyBookings = () => {
           title2Styles={"text-4xl"}
           titleStyles={"mb-10"}
         />
-        {bookings?.map((booking)=>(
-          <div key={booking._id} className='bg-white ring-1 ring-slate-900/5 p-2 pr-4 mt-3 rounded-lg'>
+        {bookings?.filter(booking=>booking.carRef).map((booking)=>(
+          <div key={booking.id} className='bg-white ring-1 ring-slate-900/5 p-2 pr-4 mt-3 rounded-lg'>
             {/* car list */}
             <div className='flexStart gap-3 mb-3'>
               <div className='bg-primary rounded-xl overflow-hidden flexCenter h-19'>
-                <img src={booking.car.images[0]} alt="" className='max-w-full max-h-full object-contain' />
+                <img src={booking.carRef?.images[0]} alt="" className='max-w-full max-h-full object-contain' />
               </div>
               <div>
-                <h5 className='capitalize line-clamp-1'>{booking.car.title}</h5>
+                <h5 className='capitalize line-clamp-1'>{booking.carRef?.title}</h5>
                 <div className='flex gap-4'>
                   <div className='flex items-center gap-x-2'>
                     <h5>Sièges</h5>
-                    <p>{booking.car.specs.seats}</p>
+                    <p>{booking.carRef?.seats}</p>
                   </div>
                   <div className='flex items-center gap-x-2'>
                     <h5>Total:</h5>
@@ -48,7 +58,7 @@ const MyBookings = () => {
                 </div>
                 <p className='flex place-items-baseline gap-1 mt-0.5'>
                   <img src={assets.pin} alt="" width={13} />
-                  {booking.car.address}
+                  {booking.carRef?.address}
                 </p>
               </div>
             </div>
@@ -57,7 +67,7 @@ const MyBookings = () => {
               <div className='flex gap-2 gap-x-4 flex-wrap'>
                 <div className='flex items-center gap-x-2'>
                   <h5>Numéro de réservation</h5>
-                  <p className='text-gray-400 text-xs'>{booking._id}</p>
+                  <p className='text-gray-400 text-xs'>{booking.id}</p>
                 </div>
                 <div className='flex items-center gap-x-2'>
                   <h5>Prise En Charge</h5>
@@ -70,17 +80,16 @@ const MyBookings = () => {
               </div>
               <div className='flex gap-2 gap-x-3'>
                 <div className='flex items-center gap-x-2'>
-                  <h5>Paiement:</h5>
-                  <div className='flex items-center gap-1'>
-                    <span className={`min-w-2.5 h-2.5 rounded-full ${
-                      booking.isPaid ? "bg-green-500" : "bg-yellow-500"
-                    }`}/>
-                    <p>{booking.isPaid ? "Payé" : "Non Payé"}</p>
-                  </div>
+                  <div className='flex items-center gap-x-2'>
+    <h5>Méthode de paiement:</h5>
+    <p className='text-gray-400 text-sm'>{booking.paymentMethod}</p>
+</div>
                 </div>
+                {/*
                 {!booking.isPaid && (
                   <button className='btn-solid !py-1 !text-xs rounded-sm'>Payer maintenant</button>
                 )}
+                */}
               </div>
             </div>
           </div>

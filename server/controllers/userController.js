@@ -13,13 +13,21 @@ export const getUserProfile = async (req, res) => {
 
 // ADD RECENT SEARCH CITY
 export const addRecentSearchCity = async (req, res) => {
+    console.log("🏙️ Store city hit!")
     try {
         const { recentSearchedCities } = req.body
 
-        // ✅ update instead of push/shift/save
+        let cities = req.user.recentSearchedCities || []
+
+        if(cities.length < 3){
+            cities = [...cities, recentSearchedCities]
+        }else{
+            cities = [...cities.slice(1), recentSearchedCities]
+        }
+
         await User.update({
             where: { id: req.user.id },
-            data: { recentSearchedCities }
+            data: { recentSearchedCities: cities }
         })
 
         res.json({ success: true, message: "Ville Ajouté" })

@@ -1,6 +1,4 @@
-import React, { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
-import { assets, cities } from '../assets/data'
+import React, { useState, useEffect } from 'react'
 import Title from './Title'
 import Item from './Item'
 import { Swiper, SwiperSlide } from 'swiper/react'
@@ -8,36 +6,27 @@ import 'swiper/css'
 import { Autoplay } from 'swiper/modules'
 import { useAppContext } from '../context/AppContext'
 
-
-const FeaturedCars = () => {
-  const {cars} = useAppContext()
-  const [featured, setFeatured] = useState([])
+const TopPicks = () => {
+  const {cars, searchedCities} = useAppContext()
+  const [topPicks, setTopPicks] = useState([])
+  console.log("TopPicks rendering", cars.length, searchedCities) 
 
   useEffect(() => {
-    //const data = cars.filter((car) => cities.includes(car.city))
-    setFeatured(cars)
-  }, [cars])
+    const data = cars.filter((car) => 
+        searchedCities.some(city => 
+            city.toLowerCase() === car.city.toLowerCase()
+        )
+    )
+    setTopPicks(data)
+  }, [cars, searchedCities])
 
-  return (
+  return topPicks.length > 0 &&  (
     <section className='max-padd-container py-16 xl:py-22'>
       <Title
-        title1={"Votre prochaine voiture vous attend"}
-        title2={"Roulez en toute simplicité"}
+        title1={"Les meilleurs choix pour vous"}
+        title2={"Populaire dans votre région"}
         titleStyles={"mb-10"}
       />
-      <div className='flexBetween mt-8 mb-6'>
-        <h5>
-          <span className='font-bold'>Affichage de 1 à 6</span>
-          {" "}sur 3 000 annonces
-        </h5>
-        <Link
-          to={'/listing'}
-          onClick={() => scrollTo(0, 0)}
-          className='bg-solid text-white text-2xl rounded-md p-2 flexCenter'
-        >
-          <img src={assets.sliders} alt="" className='invert' />
-        </Link>
-      </div>
 
       {/* CARROUSEL */}
       <Swiper
@@ -55,7 +44,7 @@ const FeaturedCars = () => {
         modules={[Autoplay]}
         className="h-[488px] md:h-[533px] xl:h-[422px] mt-5"
       >
-        {featured.slice(0, 6).map((car) => (
+        {topPicks.slice(0, 6).map((car) => (
           <SwiperSlide key={car.id} className='w-full'>
             <Item car={car} />
           </SwiperSlide>
@@ -65,4 +54,4 @@ const FeaturedCars = () => {
   )
 }
 
-export default FeaturedCars
+export default TopPicks
