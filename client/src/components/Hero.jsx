@@ -99,8 +99,17 @@ const Hero = () => {
           </form>
         </div>
 
-        <div className="flexCenter">
-          <img src={assets.bg} alt="image de fond" className="w-full md:w-[77%]" />
+        <div className="relative rounded-3xl overflow-hidden shadow-2xl shadow-gray-200/50 border border-gray-100 group">
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-900/60 via-transparent to-transparent z-10"></div>
+          <img 
+            src={assets.bg} 
+            alt="Collection de véhicules premium AysiCar" 
+            className="w-full h-[400px] md:h-[500px] object-cover group-hover:scale-105 transition-transform duration-700"
+          />
+          <div className="absolute bottom-8 left-8 z-20 text-white">
+            <h3 className="text-2xl font-bold mb-2">Notre flotte premium</h3>
+            <p className="text-slate-200 text-sm max-w-md">Des berlines élégantes aux SUV robustes, trouvez le véhicule parfait pour chaque occasion.</p>
+          </div>
         </div>
       </div>
     </section>
