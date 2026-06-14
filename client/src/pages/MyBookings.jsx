@@ -3,11 +3,72 @@ import { assets } from '../assets/data'
 import Title from '../components/Title'
 import { useAppContext } from '../context/AppContext'
 import toast from 'react-hot-toast'
+import { useSearchParams } from 'react-router-dom'
 
 
 const MyBookings = () => {
   const {currency, user, axios, getToken} = useAppContext()
   const [bookings, setBookings] = useState([])
+  const [loadingPayment, setLoadingPayment] = useState(null)
+  const [loadingCancel, setLoadingCancel] = useState(null)
+  const [searchParams, setSearchParams] = useSearchParams()
+
+  // Afficher un toast selon le retour Stripe
+  useEffect(() => {
+    const payment = searchParams.get('payment')
+    if (payment === 'success') {
+      toast.success('Paiement effectué avec succès !')
+      setSearchParams({})
+    } else if (payment === 'cancelled') {
+      toast.error('Paiement annulé.')
+      setSearchParams({})
+    }
+  }, [])
+
+  const handleStripePayment = async (bookingId) => {
+    try {
+      setLoadingPayment(bookingId)
+      const { data } = await axios.post(
+        '/api/bookings/stripe',
+        { bookingId },
+        { headers: { Authorization: `Bearer ${await getToken()}` } }
+      )
+      if (data.success) {
+        window.location.href = data.url
+      } else {
+        toast.error(data.message)
+      }
+    } catch (error) {
+      toast.error(error.message)
+    } finally {
+      setLoadingPayment(null)
+    }
+  }
+
+  const handleCancelBooking = async (bookingId) => {
+    if (!window.confirm("Confirmer l'annulation de cette réservation ?")) return
+    try {
+      setLoadingCancel(bookingId)
+      console.log("Annulation bookingId:", bookingId)
+      const { data } = await axios.post(
+        '/api/bookings/cancel',
+        { bookingId },
+        { headers: { Authorization: `Bearer ${await getToken()}` } }
+      )
+      console.log("Réponse annulation:", data)
+      if (data.success) {
+        toast.success(data.message)
+        setBookings(prev => prev.filter(b => b.id !== bookingId))
+      } else {
+        toast.error(data.message)
+      }
+    } catch (error) {
+      console.error("Erreur annulation:", error)
+      toast.error(error.message)
+    } finally {
+      setLoadingCancel(null)
+    }
+  }
 
   const getUserBooking = async ()=>{
     try {
@@ -200,13 +261,46 @@ const MyBookings = () => {
                       </div>
                     </div>
                     <div className='flex items-center gap-3'>
-                      <div className='flex items-center gap-2 bg-gray-50 px-4 py-2 rounded-xl border border-gray-100'>
-                        <svg className="w-4 h-4 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-                        </svg>
-                        <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Paiement</span>
-                        <span className='text-sm font-medium text-gray-700'>{booking.paymentMethod}</span>
-                      </div>
+                      {/* Bouton Payer en ligne — visible uniquement si non payé */}
+                      {!booking.isPaid && (
+                        <button
+                          onClick={() => handleStripePayment(booking.id)}
+                          disabled={loadingPayment === booking.id}
+                          className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed text-white text-xs font-semibold px-4 py-2 rounded-xl transition-colors"
+                        >
+                          {loadingPayment === booking.id ? (
+                            <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
+                            </svg>
+                          ) : (
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                            </svg>
+                          )}
+                          {loadingPayment === booking.id ? 'Redirection...' : 'Payer en ligne'}
+                        </button>
+                      )}
+                      {/* Bouton Annuler — visible uniquement si non payé */}
+                      {!booking.isPaid && (
+                        <button
+                          onClick={() => handleCancelBooking(booking.id)}
+                          disabled={loadingCancel === booking.id}
+                          className="flex items-center gap-2 bg-red-50 hover:bg-red-100 disabled:opacity-60 disabled:cursor-not-allowed text-red-600 border border-red-200 text-xs font-semibold px-4 py-2 rounded-xl transition-colors"
+                        >
+                          {loadingCancel === booking.id ? (
+                            <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
+                            </svg>
+                          ) : (
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                          )}
+                          {loadingCancel === booking.id ? 'Annulation...' : 'Annuler'}
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>

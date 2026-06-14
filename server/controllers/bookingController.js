@@ -1,13 +1,24 @@
-import Booking from "../models/Booking.js";  // ✅ added .js
+import Booking from "../models/Booking.js";
+import Stripe from "stripe"
 import Car from "../models/Car.js";
-import Agency from "../models/Agency.js";    // ✅ fixed duplicate import and capital A
-import Stripe from "stripe";
-import transporter from "../config/nodeMailer.js"  // ← add this
+import Agency from "../models/Agency.js";
+
+import transporter from "../config/nodeMailer.js"
+import paypal from "@paypal/checkout-server-sdk"
+
+// PAYPAL CLIENT HELPER
+const paypalClient = () => {
+    const env = new paypal.core.SandboxEnvironment(
+        process.env.PAYPAL_CLIENT_ID,
+        process.env.PAYPAL_CLIENT_SECRET
+    )
+    return new paypal.core.PayPalHttpClient(env)
+}
 
 // INTERNAL HELPER
-const checkBookingAvailability = async ({ car, pickUpDate, dropOffDate }) => {  // ✅ fixed typo
+const checkBookingAvailability = async ({ car, pickUpDate, dropOffDate }) => {
     try {
-        const bookings = await Booking.findMany({  // ✅ findMany instead of find
+        const bookings = await Booking.findMany({
             where: {
                 car,
                 pickUpDate: { lte: new Date(dropOffDate) },
@@ -22,7 +33,7 @@ const checkBookingAvailability = async ({ car, pickUpDate, dropOffDate }) => {  
 };
 
 // TO CHECK CAR AVAILABILITY [POST "/check-availability"]
-export const checkAvailability = async (req, res) => {  // ✅ fixed typo in name
+export const checkAvailability = async (req, res) => {
     try {
         const { car, pickUpDate, dropOffDate } = req.body
         const isAvailable = await checkBookingAvailability({
@@ -43,9 +54,9 @@ export const bookingCreate = async (req, res) => {
     console.log("Body:", req.body)
     try {
         const { car, pickUpDate, dropOffDate } = req.body
-        const user = req.user.id  // ✅ id instead of _id
+        const user = req.user.id
 
-        const isAvailable = await checkBookingAvailability({  // ✅ fixed function name
+        const isAvailable = await checkBookingAvailability({
             car,
             pickUpDate,
             dropOffDate,
@@ -54,26 +65,24 @@ export const bookingCreate = async (req, res) => {
             return res.json({ success: false, message: "Car is not available" })
         }
 
-        // Get car data with agency
-        const carData = await Car.findUnique({  // ✅ findUnique instead of findById
+        const carData = await Car.findUnique({
             where: { id: car },
-            include: { agencyRef: true }        // ✅ include instead of populate
+            include: { agencyRef: true }
         })
 
-        let totalPrice = carData.price  // ✅ flat field instead of carData.price.rent
+        let totalPrice = carData.price
 
-        // Calculate totalPrice based on days
         const pickUp = new Date(pickUpDate)
         const dropOff = new Date(dropOffDate)
         const timeDiff = dropOff.getTime() - pickUp.getTime()
         const days = Math.max(1, Math.ceil(timeDiff / (1000 * 3600 * 24)))
         totalPrice *= days
 
-        const booking = await Booking.create({          // ✅ lowercase create, wrapped in data:{}
+        const booking = await Booking.create({
             data: {
                 user,
                 car,
-                agency: carData.agencyRef.id,  // ✅ id instead of _id
+                agency: carData.agencyRef.id,
                 pickUpDate: new Date(pickUpDate),
                 dropOffDate: new Date(dropOffDate),
                 totalPrice,
@@ -103,22 +112,22 @@ export const bookingCreate = async (req, res) => {
 
         res.json({ success: true, message: "Booking Crée" })
     } catch (error) {
-        res.json({ success: false, message: error.message })  // ✅ fixed duplicate res.json
+        res.json({ success: false, message: error.message })
     }
 }
 
 // GET BOOKINGS OF CURRENT USER [GET "/user"]
 export const getUserBooking = async (req, res) => {
     try {
-        const user = req.user.id  // ✅ id instead of _id
-        const bookings = await Booking.findMany({  // ✅ findMany instead of find
+        const user = req.user.id
+        const bookings = await Booking.findMany({
             where: { user },
-            include: { carRef: true, agencyRef: true },  // ✅ include instead of populate
-            orderBy: { createdAt: "desc" }               // ✅ orderBy instead of sort
+            include: { carRef: true, agencyRef: true },
+            orderBy: { createdAt: "desc" }
         })
         res.json({ success: true, bookings })
     } catch (error) {
-        res.json({ success: false, message: error.message })  // ✅ fixed success:true typo
+        res.json({ success: false, message: error.message })
     }
 };
 
@@ -143,6 +152,7 @@ export const getAgencyBooking = async (req, res) => {
         res.json({ success: false, message: error.message })
     }
 }
+
 export const markAsPaid = async (req, res) => {
     try {
         const { bookingId } = req.body
@@ -156,19 +166,160 @@ export const markAsPaid = async (req, res) => {
     }
 }
 
-// STRIPE PAYMENT [POST "/stripe"]
+// ANNULER UNE RÉSERVATION [POST "/cancel"]
+export const cancelBooking = async (req, res) => {
+    try {
+        const { bookingId } = req.body
+        const booking = await Booking.findUnique({ where: { id: bookingId } })
 
+        if (!booking) return res.json({ success: false, message: "Réservation introuvable" })
+        if (booking.isPaid) return res.json({ success: false, message: "Impossible d'annuler une réservation déjà payée" })
+
+        await Booking.delete({ where: { id: bookingId } })
+
+        res.json({ success: true, message: "Réservation annulée avec succès" })
+    } catch (error) {
+        res.json({ success: false, message: error.message })
+    }
+}
+
+// STRIPE PAYMENT [POST "/stripe"] — redirige vers PayPal (Stripe non disponible au Maroc)
 export const bookingStripePayment = async (req, res) => {
     try {
-        /*
-        const {bookingId} = req.body
-        const booking = await booking.findById(bookingId)
-        const carData = await car.findById(booking.car).populate("agency")
-        const totalPrice = booking.totalPrice
-        const {origin} = req.headers
+        const { bookingId } = req.body
+        const booking = await Booking.findUnique({
+            where: { id: bookingId },
+            include: { carRef: true, agencyRef: true }
+        })
 
-        const stripeInstance = new Stripe(process.env.)
-        */
+        if (!booking) return res.json({ success: false, message: "Réservation introuvable" })
+        if (booking.isPaid) return res.json({ success: false, message: "Réservation déjà payée" })
+
+        // Convertir MAD → USD (1 USD ≈ 10 MAD)
+        const amountUSD = (booking.totalPrice / 10).toFixed(2)
+
+        const request = new paypal.orders.OrdersCreateRequest()
+        request.requestBody({
+            intent: "CAPTURE",
+            purchase_units: [{
+                custom_id: bookingId,
+                amount: {
+                    currency_code: "USD",
+                    value: amountUSD
+                },
+                description: `Location : ${booking.carRef.title} — ${booking.agencyRef.name}`
+            }],
+            application_context: {
+                return_url: `${req.headers.origin}/my-bookings?payment=success`,
+                cancel_url: `${req.headers.origin}/my-bookings?payment=cancelled`,
+                brand_name: "AYSICAR",
+                user_action: "PAY_NOW"
+            }
+        })
+
+        const order = await paypalClient().execute(request)
+
+        // Récupérer l'URL d'approbation PayPal
+        const approvalUrl = order.result.links.find(l => l.rel === "approve")?.href
+
+        res.json({ success: true, url: approvalUrl })
+    } catch (error) {
+        res.json({ success: false, message: error.message })
+    }
+}
+
+// STRIPE WEBHOOK [POST "/webhook"]
+export const stripeWebhook = async (req, res) => {
+    const sig = req.headers["stripe-signature"]
+    let event
+
+    try {
+        const stripeInstance = new Stripe(process.env.STRIPE_SECRET_KEY)
+        event = stripeInstance.webhooks.constructEvent(
+            req.body,
+            sig,
+            process.env.STRIPE_WEBHOOK_SECRET
+        )
+    } catch (err) {
+        return res.status(400).send(`Webhook Error: ${err.message}`)
+    }
+
+    if (event.type === "checkout.session.completed") {
+        const session = event.data.object
+        const bookingId = session.metadata.bookingId
+
+        await Booking.update({
+            where: { id: bookingId },
+            data: { isPaid: true, paymentMethod: "Stripe" }
+        })
+    }
+
+    res.json({ received: true })
+}
+
+// PAYPAL — CRÉER UNE COMMANDE [POST "/paypal"]
+export const bookingPaypalPayment = async (req, res) => {
+    try {
+        const { bookingId } = req.body
+        const booking = await Booking.findUnique({
+            where: { id: bookingId },
+            include: { carRef: true, agencyRef: true }
+        })
+
+        if (!booking) return res.json({ success: false, message: "Réservation introuvable" })
+        if (booking.isPaid) return res.json({ success: false, message: "Réservation déjà payée" })
+
+        // Convertir MAD → USD (1 USD ≈ 10 MAD)
+        const amountUSD = (booking.totalPrice / 10).toFixed(2)
+
+        const request = new paypal.orders.OrdersCreateRequest()
+        request.requestBody({
+            intent: "CAPTURE",
+            purchase_units: [{
+                custom_id: bookingId,
+                amount: {
+                    currency_code: "USD",
+                    value: amountUSD
+                },
+                description: `Location : ${booking.carRef.title} — ${booking.agencyRef.name}`
+            }],
+            application_context: {
+                return_url: `${req.headers.origin}/my-bookings?payment=success`,
+                cancel_url: `${req.headers.origin}/my-bookings?payment=cancelled`,
+                brand_name: "AYSICAR",
+                user_action: "PAY_NOW"
+            }
+        })
+
+        const order = await paypalClient().execute(request)
+        const approvalUrl = order.result.links.find(l => l.rel === "approve")?.href
+
+        res.json({ success: true, orderId: order.result.id, url: approvalUrl })
+    } catch (error) {
+        res.json({ success: false, message: error.message })
+    }
+}
+
+// PAYPAL — CAPTURER LE PAIEMENT [POST "/paypal/capture"]
+export const capturePaypalPayment = async (req, res) => {
+    try {
+        const { orderId } = req.body
+
+        const request = new paypal.orders.OrdersCaptureRequest(orderId)
+        const capture = await paypalClient().execute(request)
+
+        if (capture.result.status !== "COMPLETED") {
+            return res.json({ success: false, message: "Paiement non complété" })
+        }
+
+        const bookingId = capture.result.purchase_units[0].custom_id
+
+        await Booking.update({
+            where: { id: bookingId },
+            data: { isPaid: true, paymentMethod: "PayPal" }
+        })
+
+        res.json({ success: true, message: "Paiement PayPal confirmé" })
     } catch (error) {
         res.json({ success: false, message: error.message })
     }

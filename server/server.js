@@ -14,7 +14,7 @@ import bookingRouter from "./routes/bookingRoute.js"
 connectCloudinary()
 const app = express()  //initialize express application
 app.use(cors({
-    origin: ['http://localhost:5173', 'http://localhost:4000'],
+    origin: ['http://localhost:5173', 'http://localhost:4000','https://aysicar.vercel.app' ],   
     credentials: true
 }))  //enables cross-origin resource sharing
 
